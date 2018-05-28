@@ -6,23 +6,22 @@
   <meta http-equiv="cache-control" content="no-cache">
   <meta http-equiv="expires" content="0">
   
-  <title>Docker Image | Jiekun Zhang&#39;s blog</title>
+  <title>Docker Storage | Jiekun Zhang&#39;s blog</title>
   <meta name="author" content="Jiekun Zhang">
   
-  <meta name="description" content="1.whatdocker 是用go写的，将进程进行封装，Docker本身是容器管理技术，不是虚拟化技术。类似技术：VM
-2.why
-快速创建环境（开发，测试，生产）
-整体交付（运行环境+代码）
-环境一致性保证，从开发，测试以及到生产环境
-更好的完成devops
+  <meta name="description" content="Docker 提供了两种存储数据的资源
+由 storage driver 管理的镜像层和容器层。
+Data Volume
 
-3.how见下
-4.install略">
+1. Storage Driver
+storage driver 实现了多层数据的堆叠并为用户提供一个单一的合并之后的统一视图。
+
+容器由最上面一个可写的容器层，以及若干只读的">
   
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="Docker Image"/>
+  <meta property="og:title" content="Docker Storage"/>
   <meta property="og:site_name" content="Jiekun Zhang&#39;s blog"/>
 
   
@@ -120,7 +119,7 @@ var _hmt = _hmt || [];
 
 	
 		<div class="page-header">
-			<h1> Docker Image</h1>
+			<h1> Docker Storage</h1>
 		</div>
 	
 
@@ -137,100 +136,72 @@ var _hmt = _hmt || [];
 	<div class="mypage">		
 	  		
 
-	  <h2 id="1-what"><a href="#1-what" class="headerlink" title="1.what"></a>1.what</h2><p>docker 是用go写的，将进程进行封装，<br>Docker本身是容器管理技术，不是虚拟化技术。<br>类似技术：VM</p>
-<h2 id="2-why"><a href="#2-why" class="headerlink" title="2.why"></a>2.why</h2><ul>
-<li>快速创建环境（开发，测试，生产）</li>
-<li>整体交付（运行环境+代码）</li>
-<li>环境一致性保证，从开发，测试以及到生产环境</li>
-<li>更好的完成devops</li>
+	  <h1 id="Docker-提供了两种存储数据的资源"><a href="#Docker-提供了两种存储数据的资源" class="headerlink" title="Docker 提供了两种存储数据的资源"></a>Docker 提供了两种存储数据的资源</h1><ul>
+<li>由 storage driver 管理的镜像层和容器层。</li>
+<li>Data Volume</li>
 </ul>
-<h2 id="3-how"><a href="#3-how" class="headerlink" title="3.how"></a>3.how</h2><p>见下</p>
-<h2 id="4-install"><a href="#4-install" class="headerlink" title="4.install"></a>4.install</h2><p>略</p>
-<h2 id="5-基本概念"><a href="#5-基本概念" class="headerlink" title="5.基本概念"></a>5.基本概念</h2><ul>
-<li>image<ol>
-<li>一个特殊的文件系统，除了提供容器运行时所需的程序、库、资源、配置等文件外，还包含了一些为运行时准备的一些配置参数（如匿名卷、环境变量、用户等）。镜像不包含任何动态数据，其内容在构建之后也不会被改变。</li>
-<li>分层存储</li>
-</ol>
-</li>
-<li>container：<ol>
-<li>容器与镜像的关系<br> 容器就是镜像的实例，一个镜像可以创建无数个实例。</li>
-</ol>
-<ul>
-<li>区别：<ol>
-<li>镜像only读取 不能写入，但是可以在当前image上叠加，形成新的image</li>
-<li>容器支持读写    </li>
-</ol>
-</li>
-</ul>
-</li>
-<li>registry：<br>  镜像中央存储仓库<br>  其中Docker hub是docker官方提供的中央存储仓库</li>
-</ul>
-<h2 id="6-image详解"><a href="#6-image详解" class="headerlink" title="6.image详解"></a>6.image详解</h2><blockquote>
-<p>Docker镜像管理</p>
+<h1 id="1-Storage-Driver"><a href="#1-Storage-Driver" class="headerlink" title="1. Storage Driver"></a>1. Storage Driver</h1><blockquote>
+<p>storage driver 实现了多层数据的堆叠并为用户提供一个单一的合并之后的统一视图。</p>
+</blockquote>
+<p>容器由最上面一个可写的容器层，以及若干只读的镜像层组成，容器的数据就存放在这些层中。这样的分层结构最大的特性是 Copy-on-Write：</p>
 <ol>
-<li>镜像分层技术<br>|-aufs</li>
-<li>创建镜像<br> |-DockerFile(recommend)<br> |-docker commit</li>
-<li>下载镜像到主机<br> |-docker pull</li>
-<li>删除镜像<br> |-docker rmi<br>4.1 两种情况不能删除images<ol>
-<li>该进行有创建容器存在</li>
-<li>该image是其他image的父image</li>
-</ol>
+<li><p>新数据会直接存放在最上面的容器层。</p>
 </li>
-<li>上传镜像到registry<br> |-docker push</li>
-<li>Docker数据管理<br>如果我们删除了容器，但是数据不会被删除。<br>特性：<br> 1.保留容器数据<br> 2.容器volume最佳使用方法<br> 3.容器和volume的关系<br> 4.容器volume如何管理</li>
-</ol>
-</blockquote>
-<h2 id="7-tag"><a href="#7-tag" class="headerlink" title="7. tag"></a>7. tag</h2><p>下面通过例子为大家介绍 Docker 社区普遍使用的 tag 方案。</p>
+<li><p>修改现有数据会先从镜像层将数据复制到容器层，修改后的数据直接保存在容器层中，镜像层保持不变。</p>
+</li>
+<li><p>如果多个层中有命名相同的文件，用户只能看到最上面那层中的文件。</p>
 <blockquote>
-<p>docker tag myimage-v2.0.0 myimage:2<br> docker tag myimage-v2.0.0 myimage:2.0<br> docker tag myimage-v2.0.0 myimage:2.0.0<br> docker tag myimage-v2.0.0 myimage:latest</p>
+<p>Docker 支持多种 storage driver，有 AUFS、Device Mapper、Btrfs、OverlayFS、VFS 和 ZFS。它们都能实现分层的架构，同时又有各自的特性。对于 Docker 用户来说，具体选择使用哪个 storage driver 是一个难题<br>Docker 官方给出了一个简单的答案：<br>##优先使用 Linux 发行版默认的 storage driv</p>
 </blockquote>
-<blockquote>
-<p>参考：<a href="http://www.cnblogs.com/CloudMan6/p/6885700.html" target="_blank" rel="noopener">http://www.cnblogs.com/CloudMan6/p/6885700.html</a></p>
-</blockquote>
-<h2 id="8-Docker-Hub"><a href="#8-Docker-Hub" class="headerlink" title="8. Docker Hub"></a>8. Docker Hub</h2><ol>
-<li><p>登陆Docker Hub</p>
-<ul>
-<li>docker login -u xxxx</li>
-</ul>
-</li>
-<li><p>修改镜像的 repository 使之与 Docker Hub 账号匹配。</p>
-<ul>
-<li>docker tag username/app:version</li>
-</ul>
-</li>
-<li><p>上传</p>
-<ul>
-<li>docker push username/app:version</li>
-</ul>
-</li>
-<li><p>下载</p>
-<ul>
-<li>docker pull username/app:version</li>
-</ul>
 </li>
 </ol>
-<h2 id="9-搭建本地-Registry"><a href="#9-搭建本地-Registry" class="headerlink" title="9. 搭建本地 Registry"></a>9. 搭建本地 Registry</h2><p>略</p>
-<h2 id="10-小结"><a href="#10-小结" class="headerlink" title="10. 小结"></a>10. 小结</h2><p>下面是镜像的常用操作子命令：</p>
+<h1 id="2-Data-Volume"><a href="#2-Data-Volume" class="headerlink" title="2. Data Volume"></a>2. Data Volume</h1><p>Data Volume 本质上是 Docker Host 文件系统中的目录或文件，能够直接被 mount 到容器的文件系统中。Data Volume 有以下特点：</p>
+<blockquote>
 <ul>
-<li><p>images    显示镜像列表</p>
-</li>
-<li><p>history   显示镜像构建历史</p>
-</li>
-<li><p>commit    从容器创建新镜像</p>
-</li>
-<li><p>build     从 Dockerfile 构建镜像</p>
-</li>
-<li><p>tag       给镜像打 tag</p>
-</li>
-<li><p>pull      从 registry 下载镜像</p>
-</li>
-<li><p>push      将 镜像 上传到 registry</p>
-</li>
-<li><p>rmi       删除 Docker host 中的镜像</p>
-</li>
-<li><p>search    搜索 Docker Hub 中的镜像</p>
-</li>
+<li>Data Volume 是目录或文件，而非没有格式化的磁盘（块设备）。</li>
+<li>容器可以读写 volume 中的数据。</li>
+<li>volume 数据可以被永久的保存，即使使用它的容器已经销毁。</li>
 </ul>
+</blockquote>
+<p>现在我们有数据层（镜像层和容器层）和 volume 都可以用来存放数据，具体使用的时候要怎样选择呢？考虑下面几个场景：</p>
+<blockquote>
+<ol>
+<li>Database 软件 vs Database 数据</li>
+<li>Web 应用 vs 应用产生的日志</li>
+<li>数据分析软件 vs input / output 数据</li>
+<li>Apache Server vs 静态 HTML 文件</li>
+</ol>
+</blockquote>
+<p>相信大家会做出这样的选择：</p>
+<blockquote>
+<p>前者放在数据层中。因为这部分内容是无状态的，应该作为镜像的一部分。<br>后者放在 Data Volume 中。这是需要持久化的数据，并且应该与镜像分开存放。</p>
+</blockquote>
+<h2 id="1-如何设置-voluem-的容量？"><a href="#1-如何设置-voluem-的容量？" class="headerlink" title="1.如何设置 voluem 的容量？"></a>1.如何设置 voluem 的容量？</h2><p>因为 volume 实际上是 docker host 文件系统的一部分，所以 volume 的容量取决于文件系统当前未使用的空间，目前还没有方法设置 volume 的容量。</p>
+<p>在具体的使用上，docker 提供了两种类型的 volume：</p>
+<blockquote>
+<ul>
+<li>bind mount <ul>
+<li>是将 host 上已存在的目录或文件 mount 到容器。</li>
+</ul>
+</li>
+<li>docker managed volume。</li>
+</ul>
+</blockquote>
+<h3 id="1-通过-v-将其-mount-到-httpd-容器："><a href="#1-通过-v-将其-mount-到-httpd-容器：" class="headerlink" title="1.通过 -v 将其 mount 到 httpd 容器："></a>1.通过 -v 将其 mount 到 httpd 容器：</h3><p><img src="http://7xo6kd.com1.z0.glb.clouddn.com/upload-ueditor-image-20170709-1499591163884034120.jpg" alt=""></p>
+<blockquote>
+<p>-v 的格式为 <host path="">:<container path="">。/usr/local/apache2/htdocs 就是 apache server 存放静态文件的地方。由于 /usr/local/apache2/htdocs 已经存在，原有数据会被隐藏起来，取而代之的是 host $HOME/htdocs/ 中的数据，这与 linux mount 命令的行为是一致的。</container></host></p>
+</blockquote>
+<p>bind mount 时还可以指定数据的读写权限</p>
+<blockquote>
+<ol>
+<li>默认是可读可写，可指定为只读</li>
+</ol>
+</blockquote>
+<blockquote>
+<ol start="2">
+<li>除了 bind mount 目录，还可以单独指定一个文件</li>
+</ol>
+</blockquote>
 	  
 	</div>
 
