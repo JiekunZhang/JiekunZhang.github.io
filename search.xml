@@ -3,48 +3,6 @@
   
     
     <entry>
-      <title>Docker Container</title>
-      <link href="/2018/05/28/docker-container/"/>
-      <url>/2018/05/28/docker-container/</url>
-      <content type="html"><![CDATA[<h2 id="1-常用命令"><a href="#1-常用命令" class="headerlink" title="1. 常用命令"></a>1. 常用命令</h2><ul><li>docker run [username]/app:verison CMD</li><li>docker ps -a / docker container ls -a</li><li>docker stop containerID</li><li>docker rm containerID</li><li>docker rmi ImageID</li><li>docker run … –name tagName</li><li>docker start／stop</li><li>docker run -it –restart=always xxxx</li><li>docker pause/unpause</li></ul><h2 id="2-如何让容器保存运行呢？"><a href="#2-如何让容器保存运行呢？" class="headerlink" title="2. 如何让容器保存运行呢？"></a>2. 如何让容器保存运行呢？</h2><p>因为容器的生命周期依赖于启动时执行的命令，只要该命令不结束，容器也就不会退出。</p><ol><li>写个while True 命令让程序持续运行 即可</li><li>docker run –restart=always</li></ol><h2 id="3-两种进入容器的方法"><a href="#3-两种进入容器的方法" class="headerlink" title="3. 两种进入容器的方法"></a>3. 两种进入容器的方法</h2><p>docker attach: 用于查看docker输出结果，不可以执行命令<br>docker exec:  是在容器中打开新的终端，并且可以启动新的进程。</p><ul><li>docker exec -it <container> bash|sh 是执行 exec 最常用的方式。</container></li></ul><p>结论：如果想直接在终端中查看启动命令的输出，用 attach；其他情况使用 exec。</p><ul><li>当然，如果只是为了查看启动命令的输出，可以使用 docker logs 命令：docker log -f containID<blockquote><p>参考：<a href="http://www.cnblogs.com/CloudMan6/p/6928772.html" target="_blank" rel="noopener">http://www.cnblogs.com/CloudMan6/p/6928772.html</a></p></blockquote></li></ul><h2 id="4-容器分类"><a href="#4-容器分类" class="headerlink" title="4. 容器分类"></a>4. 容器分类</h2><ul><li><p>服务类的容器。</p></li><li><p>工具类的容器。</p></li></ul><ol><li><p>服务类容器以 daemon 的形式运行，对外提供服务。比如 web server，数据库等。通过 -d 以后台方式启动这类容器是非常合适的。如果要排查问题，可以通过 exec -it 进入容器。</p></li><li><p>工具类容器通常给能我们提供一个临时的工作环境，通常以 run -it 方式运行</p></li></ol><h2 id="5-容器生命周期"><a href="#5-容器生命周期" class="headerlink" title="5.容器生命周期"></a>5.容器生命周期</h2><p><img src="http://7xo6kd.com1.z0.glb.clouddn.com/upload-ueditor-image-20170608-1496889671778038814.jpg" alt="容器生命周期" title="123"></p><h2 id="6-限制容器对内存的使用（定额）"><a href="#6-限制容器对内存的使用（定额）" class="headerlink" title="6.限制容器对内存的使用（定额）"></a>6.限制容器对内存的使用（定额）</h2><ol><li>内存限制</li></ol><ul><li>docker run -m 200M –memory-swap=300M ubuntu<br>（-m ：物理内存，–memory-swap:虚拟内存）<blockquote><p>下面我们将使用 progrium/stress 镜像来学习如何为容器分配内存。该镜像可用于对容器执行压力测试。执行如下命令：<br>docker run -it -m 200M –memory-swap=300M progrium/stress –vm 1 –vm-bytes 280M<br>–vm 1：启动 1 个内存工作线程。<br>–vm-bytes 280M：每个线程分配 280M 内存。<br>因为 280M 在可分配的范围（300M）内，所以工作线程能够正常工作，<br>如果让工作线程分配的内存超过 300M,分配的内存超过限额，stress 线程报错，容器退出</p></blockquote></li></ul><p>如果在启动容器时只指定 -m 而不指定 –memory-swap，那么 –memory-swap 默认为 -m 的两倍</p><h2 id="7-限制容器对CPU的使用（成比例）"><a href="#7-限制容器对CPU的使用（成比例）" class="headerlink" title="7. 限制容器对CPU的使用（成比例）"></a>7. 限制容器对CPU的使用（成比例）</h2><blockquote><p>Docker 可以通过 -c 或 –cpu-shares 设置容器使用 CPU 的权重。如果不指定，默认值为 1024。</p></blockquote><p>与内存限额不同，通过 -c 设置的 cpu share 并不是 CPU 资源的绝对数量，而是一个相对的权重值。某个容器最终能分配到的 CPU 资源取决于它的 cpu share 占所有容器 cpu share 总和的比例。</p><p>换句话说：通过 cpu share 可以设置容器使用 CPU 的优先级。</p><h2 id="8-限制容器对-Block-IO-带宽资源的使用"><a href="#8-限制容器对-Block-IO-带宽资源的使用" class="headerlink" title="8. 限制容器对 Block IO 带宽资源的使用"></a>8. 限制容器对 Block IO 带宽资源的使用</h2><blockquote><p>默认情况下，所有容器能平等地读写磁盘，可以通过设置 –blkio-weight 参数来改变容器 block IO 的优先级。</p></blockquote><p>–blkio-weight 与 –cpu-shares 类似，设置的是相对权重值，默认为 500。在下面的例子中，container_A 读写磁盘的带宽是 container_B 的两倍。</p><blockquote><p>参考 <a href="http://www.cnblogs.com/CloudMan6/p/7016050.html" target="_blank" rel="noopener">http://www.cnblogs.com/CloudMan6/p/7016050.html</a></p></blockquote><h2 id="9-容器底层技术"><a href="#9-容器底层技术" class="headerlink" title="9. 容器底层技术"></a>9. 容器底层技术</h2><blockquote><p>cgroup 和 namespace 是最重要的两种技术。<br>cgroup 实现资源限额， namespace 实现资源隔离</p></blockquote><ol><li><p>cgroup<br>cgroup 全称 Control Group。Linux 操作系统通过 cgroup 可以设置进程使用 CPU、内存 和 IO 资源的限额。<br>前面我们看到的–cpu-shares、-m、–device-write-bps 实际上就是在配置 cgroup。</p><blockquote><p>cgroup 到底长什么样子呢？我们可以在 /sys/fs/cgroup 中找到它。</p><ul><li>在 /sys/fs/cgroup/cpu/docker 目录中，Linux 会为每个容器创建一个 cgroup 目录，以容器长ID 命名。<br>目录中包含所有与 cpu 相关的 cgroup 配置，文件 cpu.shares 保存的就是 –cpu-shares 的配置，值为 512。</li></ul></blockquote><blockquote><p>同样的，<br>/sys/fs/cgroup/memory/docker     –内存<br>/sys/fs/cgroup/blkio/docker      –Block IO<br>保存的是内存以及 Block IO 的 cgroup 配置。</p></blockquote></li><li><p>namespace<br>namespace 实现了容器间资源的隔离( 文件系统，网卡等资源 )</p><blockquote><p>Linux 使用了六种 namespace，分别对应六种资源：<br>Mount、UTS、IPC、PID、Network 和 User，下面我们分别讨论。</p><ul><li>Mount namespace<br>Mount namespace 让容器看上去拥有整个文件系统。<br>容器有自己的 / 目录，可以执行 mount 和 umount 命令。当然我们知道这些操作只在当前容器中生效，不会影响到 host 和其他容器。</li><li>UTS namespace<br>简单的说，UTS namespace 让容器有自己的 hostname。 默认情况下，容器的 hostname 是它的短ID，可以通过 -h 或 –hostname 参数设置。</li><li>IPC namespace<br>IPC namespace 让容器拥有自己的共享内存和信号量（semaphore）来实现进程间通信，而不会与 host 和其他容器的 IPC 混在一起。</li><li>PID namespace<br>容器拥有自己独立的一套 PID，这就是 PID namespace 提供的功能。</li><li>Network namespace<br>Network namespace 让容器拥有自己独立的网卡、IP、路由等资源</li><li>User namespace<br>User namespace 让容器能够管理自己的用户，host 不能看到容器中创建的用户。</li></ul></blockquote></li></ol>]]></content>
-      
-      <categories>
-          
-          <category> Study </category>
-          
-      </categories>
-      
-      
-        <tags>
-            
-            <tag> Docker </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    <entry>
-      <title>Docker Image</title>
-      <link href="/2018/05/28/docker-Image/"/>
-      <url>/2018/05/28/docker-Image/</url>
-      <content type="html"><![CDATA[<h2 id="1-what"><a href="#1-what" class="headerlink" title="1.what"></a>1.what</h2><p>docker 是用go写的，将进程进行封装，<br>Docker本身是容器管理技术，不是虚拟化技术。<br>类似技术：VM</p><h2 id="2-why"><a href="#2-why" class="headerlink" title="2.why"></a>2.why</h2><ul><li>快速创建环境（开发，测试，生产）</li><li>整体交付（运行环境+代码）</li><li>环境一致性保证，从开发，测试以及到生产环境</li><li>更好的完成devops</li></ul><h2 id="3-how"><a href="#3-how" class="headerlink" title="3.how"></a>3.how</h2><p>见下</p><h2 id="4-install"><a href="#4-install" class="headerlink" title="4.install"></a>4.install</h2><p>略</p><h2 id="5-基本概念"><a href="#5-基本概念" class="headerlink" title="5.基本概念"></a>5.基本概念</h2><ul><li>image<ol><li>一个特殊的文件系统，除了提供容器运行时所需的程序、库、资源、配置等文件外，还包含了一些为运行时准备的一些配置参数（如匿名卷、环境变量、用户等）。镜像不包含任何动态数据，其内容在构建之后也不会被改变。</li><li>分层存储</li></ol></li><li>container：<ol><li>容器与镜像的关系<br> 容器就是镜像的实例，一个镜像可以创建无数个实例。</li></ol><ul><li>区别：<ol><li>镜像only读取 不能写入，但是可以在当前image上叠加，形成新的image</li><li>容器支持读写    </li></ol></li></ul></li><li>registry：<br>  镜像中央存储仓库<br>  其中Docker hub是docker官方提供的中央存储仓库</li></ul><h2 id="6-image详解"><a href="#6-image详解" class="headerlink" title="6.image详解"></a>6.image详解</h2><blockquote><p>Docker镜像管理</p><ol><li>镜像分层技术<br>|-aufs</li><li>创建镜像<br> |-DockerFile(recommend)<br> |-docker commit</li><li>下载镜像到主机<br> |-docker pull</li><li>删除镜像<br> |-docker rmi<br>4.1 两种情况不能删除images<ol><li>该进行有创建容器存在</li><li>该image是其他image的父image</li></ol></li><li>上传镜像到registry<br> |-docker push</li><li>Docker数据管理<br>如果我们删除了容器，但是数据不会被删除。<br>特性：<br> 1.保留容器数据<br> 2.容器volume最佳使用方法<br> 3.容器和volume的关系<br> 4.容器volume如何管理</li></ol></blockquote><h2 id="7-tag"><a href="#7-tag" class="headerlink" title="7. tag"></a>7. tag</h2><p>下面通过例子为大家介绍 Docker 社区普遍使用的 tag 方案。</p><blockquote><p>docker tag myimage-v2.0.0 myimage:2<br> docker tag myimage-v2.0.0 myimage:2.0<br> docker tag myimage-v2.0.0 myimage:2.0.0<br> docker tag myimage-v2.0.0 myimage:latest</p></blockquote><blockquote><p>参考：<a href="http://www.cnblogs.com/CloudMan6/p/6885700.html" target="_blank" rel="noopener">http://www.cnblogs.com/CloudMan6/p/6885700.html</a></p></blockquote><h2 id="8-Docker-Hub"><a href="#8-Docker-Hub" class="headerlink" title="8. Docker Hub"></a>8. Docker Hub</h2><ol><li><p>登陆Docker Hub</p><ul><li>docker login -u xxxx</li></ul></li><li><p>修改镜像的 repository 使之与 Docker Hub 账号匹配。</p><ul><li>docker tag username/app:version</li></ul></li><li><p>上传</p><ul><li>docker push username/app:version</li></ul></li><li><p>下载</p><ul><li>docker pull username/app:version</li></ul></li></ol><h2 id="9-搭建本地-Registry"><a href="#9-搭建本地-Registry" class="headerlink" title="9. 搭建本地 Registry"></a>9. 搭建本地 Registry</h2><p>略</p><h2 id="10-小结"><a href="#10-小结" class="headerlink" title="10. 小结"></a>10. 小结</h2><p>下面是镜像的常用操作子命令：</p><ul><li><p>images    显示镜像列表</p></li><li><p>history   显示镜像构建历史</p></li><li><p>commit    从容器创建新镜像</p></li><li><p>build     从 Dockerfile 构建镜像</p></li><li><p>tag       给镜像打 tag</p></li><li><p>pull      从 registry 下载镜像</p></li><li><p>push      将 镜像 上传到 registry</p></li><li><p>rmi       删除 Docker host 中的镜像</p></li><li><p>search    搜索 Docker Hub 中的镜像</p></li></ul>]]></content>
-      
-      <categories>
-          
-          <category> Study </category>
-          
-      </categories>
-      
-      
-        <tags>
-            
-            <tag> Docker </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    <entry>
       <title>Docker NetWork</title>
       <link href="/2018/05/28/docker-network/"/>
       <url>/2018/05/28/docker-network/</url>
@@ -66,10 +24,73 @@
     </entry>
     
     <entry>
+      <title>Docker Container</title>
+      <link href="/2018/05/28/docker-container/"/>
+      <url>/2018/05/28/docker-container/</url>
+      <content type="html"><![CDATA[<h2 id="1-常用命令"><a href="#1-常用命令" class="headerlink" title="1. 常用命令"></a>1. 常用命令</h2><ul><li>docker run [username]/app:verison CMD</li><li>docker ps -a / docker container ls -a</li><li>docker stop containerID</li><li>docker rm containerID</li><li>docker rmi ImageID</li><li>docker run … –name tagName</li><li>docker start／stop</li><li>docker run -it –restart=always xxxx</li><li>docker pause/unpause</li></ul><h2 id="2-如何让容器保存运行呢？"><a href="#2-如何让容器保存运行呢？" class="headerlink" title="2. 如何让容器保存运行呢？"></a>2. 如何让容器保存运行呢？</h2><p>因为容器的生命周期依赖于启动时执行的命令，只要该命令不结束，容器也就不会退出。</p><ol><li>写个while True 命令让程序持续运行 即可</li><li>docker run –restart=always</li></ol><h2 id="3-两种进入容器的方法"><a href="#3-两种进入容器的方法" class="headerlink" title="3. 两种进入容器的方法"></a>3. 两种进入容器的方法</h2><p>docker attach: 用于查看docker输出结果，不可以执行命令<br>docker exec:  是在容器中打开新的终端，并且可以启动新的进程。</p><ul><li>docker exec -it <container> bash|sh 是执行 exec 最常用的方式。</container></li></ul><p>结论：如果想直接在终端中查看启动命令的输出，用 attach；其他情况使用 exec。</p><ul><li>当然，如果只是为了查看启动命令的输出，可以使用 docker logs 命令：docker log -f containID<blockquote><p>参考：<a href="http://www.cnblogs.com/CloudMan6/p/6928772.html" target="_blank" rel="noopener">http://www.cnblogs.com/CloudMan6/p/6928772.html</a></p></blockquote></li></ul><h2 id="4-容器分类"><a href="#4-容器分类" class="headerlink" title="4. 容器分类"></a>4. 容器分类</h2><ul><li><p>服务类的容器。</p></li><li><p>工具类的容器。</p></li></ul><ol><li><p>服务类容器以 daemon 的形式运行，对外提供服务。比如 web server，数据库等。通过 -d 以后台方式启动这类容器是非常合适的。如果要排查问题，可以通过 exec -it 进入容器。</p></li><li><p>工具类容器通常给能我们提供一个临时的工作环境，通常以 run -it 方式运行</p></li></ol><h2 id="5-容器生命周期"><a href="#5-容器生命周期" class="headerlink" title="5.容器生命周期"></a>5.容器生命周期</h2><p><img src="http://7xo6kd.com1.z0.glb.clouddn.com/upload-ueditor-image-20170608-1496889671778038814.jpg" alt="容器生命周期" title="123"></p><h2 id="6-限制容器对内存的使用（定额）"><a href="#6-限制容器对内存的使用（定额）" class="headerlink" title="6.限制容器对内存的使用（定额）"></a>6.限制容器对内存的使用（定额）</h2><ol><li>内存限制</li></ol><ul><li>docker run -m 200M –memory-swap=300M ubuntu<br>（-m ：物理内存，–memory-swap:虚拟内存）<blockquote><p>下面我们将使用 progrium/stress 镜像来学习如何为容器分配内存。该镜像可用于对容器执行压力测试。执行如下命令：<br>docker run -it -m 200M –memory-swap=300M progrium/stress –vm 1 –vm-bytes 280M<br>–vm 1：启动 1 个内存工作线程。<br>–vm-bytes 280M：每个线程分配 280M 内存。<br>因为 280M 在可分配的范围（300M）内，所以工作线程能够正常工作，<br>如果让工作线程分配的内存超过 300M,分配的内存超过限额，stress 线程报错，容器退出</p></blockquote></li></ul><p>如果在启动容器时只指定 -m 而不指定 –memory-swap，那么 –memory-swap 默认为 -m 的两倍</p><h2 id="7-限制容器对CPU的使用（成比例）"><a href="#7-限制容器对CPU的使用（成比例）" class="headerlink" title="7. 限制容器对CPU的使用（成比例）"></a>7. 限制容器对CPU的使用（成比例）</h2><blockquote><p>Docker 可以通过 -c 或 –cpu-shares 设置容器使用 CPU 的权重。如果不指定，默认值为 1024。</p></blockquote><p>与内存限额不同，通过 -c 设置的 cpu share 并不是 CPU 资源的绝对数量，而是一个相对的权重值。某个容器最终能分配到的 CPU 资源取决于它的 cpu share 占所有容器 cpu share 总和的比例。</p><p>换句话说：通过 cpu share 可以设置容器使用 CPU 的优先级。</p><h2 id="8-限制容器对-Block-IO-带宽资源的使用"><a href="#8-限制容器对-Block-IO-带宽资源的使用" class="headerlink" title="8. 限制容器对 Block IO 带宽资源的使用"></a>8. 限制容器对 Block IO 带宽资源的使用</h2><blockquote><p>默认情况下，所有容器能平等地读写磁盘，可以通过设置 –blkio-weight 参数来改变容器 block IO 的优先级。</p></blockquote><p>–blkio-weight 与 –cpu-shares 类似，设置的是相对权重值，默认为 500。在下面的例子中，container_A 读写磁盘的带宽是 container_B 的两倍。</p><blockquote><p>参考 <a href="http://www.cnblogs.com/CloudMan6/p/7016050.html" target="_blank" rel="noopener">http://www.cnblogs.com/CloudMan6/p/7016050.html</a></p></blockquote><h2 id="9-容器底层技术"><a href="#9-容器底层技术" class="headerlink" title="9. 容器底层技术"></a>9. 容器底层技术</h2><blockquote><p>cgroup 和 namespace 是最重要的两种技术。<br>cgroup 实现资源限额， namespace 实现资源隔离</p></blockquote><ol><li><p>cgroup<br>cgroup 全称 Control Group。Linux 操作系统通过 cgroup 可以设置进程使用 CPU、内存 和 IO 资源的限额。<br>前面我们看到的–cpu-shares、-m、–device-write-bps 实际上就是在配置 cgroup。</p><blockquote><p>cgroup 到底长什么样子呢？我们可以在 /sys/fs/cgroup 中找到它。</p><ul><li>在 /sys/fs/cgroup/cpu/docker 目录中，Linux 会为每个容器创建一个 cgroup 目录，以容器长ID 命名。<br>目录中包含所有与 cpu 相关的 cgroup 配置，文件 cpu.shares 保存的就是 –cpu-shares 的配置，值为 512。</li></ul></blockquote><blockquote><p>同样的，<br>/sys/fs/cgroup/memory/docker     –内存<br>/sys/fs/cgroup/blkio/docker      –Block IO<br>保存的是内存以及 Block IO 的 cgroup 配置。</p></blockquote></li><li><p>namespace<br>namespace 实现了容器间资源的隔离( 文件系统，网卡等资源 )</p><blockquote><p>Linux 使用了六种 namespace，分别对应六种资源：<br>Mount、UTS、IPC、PID、Network 和 User，下面我们分别讨论。</p><ul><li>Mount namespace<br>Mount namespace 让容器看上去拥有整个文件系统。<br>容器有自己的 / 目录，可以执行 mount 和 umount 命令。当然我们知道这些操作只在当前容器中生效，不会影响到 host 和其他容器。</li><li>UTS namespace<br>简单的说，UTS namespace 让容器有自己的 hostname。 默认情况下，容器的 hostname 是它的短ID，可以通过 -h 或 –hostname 参数设置。</li><li>IPC namespace<br>IPC namespace 让容器拥有自己的共享内存和信号量（semaphore）来实现进程间通信，而不会与 host 和其他容器的 IPC 混在一起。</li><li>PID namespace<br>容器拥有自己独立的一套 PID，这就是 PID namespace 提供的功能。</li><li>Network namespace<br>Network namespace 让容器拥有自己独立的网卡、IP、路由等资源</li><li>User namespace<br>User namespace 让容器能够管理自己的用户，host 不能看到容器中创建的用户。</li></ul></blockquote></li></ol>]]></content>
+      
+      <categories>
+          
+          <category> Study </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Docker </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    <entry>
       <title>Docker Storage</title>
       <link href="/2018/05/28/docker-storage/"/>
       <url>/2018/05/28/docker-storage/</url>
       <content type="html"><![CDATA[<h1 id="Docker-提供了两种存储数据的资源"><a href="#Docker-提供了两种存储数据的资源" class="headerlink" title="Docker 提供了两种存储数据的资源"></a>Docker 提供了两种存储数据的资源</h1><ul><li>由 storage driver 管理的镜像层和容器层。</li><li>Data Volume</li></ul><h1 id="1-Storage-Driver"><a href="#1-Storage-Driver" class="headerlink" title="1. Storage Driver"></a>1. Storage Driver</h1><blockquote><p>storage driver 实现了多层数据的堆叠并为用户提供一个单一的合并之后的统一视图。</p></blockquote><p>容器由最上面一个可写的容器层，以及若干只读的镜像层组成，容器的数据就存放在这些层中。这样的分层结构最大的特性是 Copy-on-Write：</p><ol><li><p>新数据会直接存放在最上面的容器层。</p></li><li><p>修改现有数据会先从镜像层将数据复制到容器层，修改后的数据直接保存在容器层中，镜像层保持不变。</p></li><li><p>如果多个层中有命名相同的文件，用户只能看到最上面那层中的文件。</p><blockquote><p>Docker 支持多种 storage driver，有 AUFS、Device Mapper、Btrfs、OverlayFS、VFS 和 ZFS。它们都能实现分层的架构，同时又有各自的特性。对于 Docker 用户来说，具体选择使用哪个 storage driver 是一个难题<br>Docker 官方给出了一个简单的答案：<br>##优先使用 Linux 发行版默认的 storage driv</p></blockquote></li></ol><h1 id="2-Data-Volume"><a href="#2-Data-Volume" class="headerlink" title="2. Data Volume"></a>2. Data Volume</h1><p>Data Volume 本质上是 Docker Host 文件系统中的目录或文件，能够直接被 mount 到容器的文件系统中。Data Volume 有以下特点：</p><blockquote><ul><li>Data Volume 是目录或文件，而非没有格式化的磁盘（块设备）。</li><li>容器可以读写 volume 中的数据。</li><li>volume 数据可以被永久的保存，即使使用它的容器已经销毁。</li></ul></blockquote><p>现在我们有数据层（镜像层和容器层）和 volume 都可以用来存放数据，具体使用的时候要怎样选择呢？考虑下面几个场景：</p><blockquote><ol><li>Database 软件 vs Database 数据</li><li>Web 应用 vs 应用产生的日志</li><li>数据分析软件 vs input / output 数据</li><li>Apache Server vs 静态 HTML 文件</li></ol></blockquote><p>相信大家会做出这样的选择：</p><blockquote><p>前者放在数据层中。因为这部分内容是无状态的，应该作为镜像的一部分。<br>后者放在 Data Volume 中。这是需要持久化的数据，并且应该与镜像分开存放。</p></blockquote><h2 id="1-如何设置-voluem-的容量？"><a href="#1-如何设置-voluem-的容量？" class="headerlink" title="1.如何设置 voluem 的容量？"></a>1.如何设置 voluem 的容量？</h2><p>因为 volume 实际上是 docker host 文件系统的一部分，所以 volume 的容量取决于文件系统当前未使用的空间，目前还没有方法设置 volume 的容量。</p><p>在具体的使用上，docker 提供了两种类型的 volume：</p><blockquote><ul><li>bind mount <ul><li>是将 host 上已存在的目录或文件 mount 到容器。</li></ul></li><li>docker managed volume。</li></ul></blockquote><h3 id="1-通过-v-将其-mount-到-httpd-容器："><a href="#1-通过-v-将其-mount-到-httpd-容器：" class="headerlink" title="1.通过 -v 将其 mount 到 httpd 容器："></a>1.通过 -v 将其 mount 到 httpd 容器：</h3><p><img src="http://7xo6kd.com1.z0.glb.clouddn.com/upload-ueditor-image-20170709-1499591163884034120.jpg" alt=""></p><blockquote><p>-v 的格式为 <host path="">:<container path="">。/usr/local/apache2/htdocs 就是 apache server 存放静态文件的地方。由于 /usr/local/apache2/htdocs 已经存在，原有数据会被隐藏起来，取而代之的是 host $HOME/htdocs/ 中的数据，这与 linux mount 命令的行为是一致的。</container></host></p></blockquote><p>bind mount 时还可以指定数据的读写权限</p><blockquote><ol><li>默认是可读可写，可指定为只读</li></ol></blockquote><blockquote><ol start="2"><li>除了 bind mount 目录，还可以单独指定一个文件</li></ol></blockquote>]]></content>
+      
+      <categories>
+          
+          <category> Study </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Docker </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    <entry>
+      <title>Tips(日常更新)</title>
+      <link href="/2018/05/28/tips/"/>
+      <url>/2018/05/28/tips/</url>
+      <content type="html"><![CDATA[<h2 id="2018-05-25"><a href="#2018-05-25" class="headerlink" title="2018.05.25"></a>2018.05.25</h2><ol><li><strong>pipreqs</strong> : 一个自动深层requestments.txt的工具<ul><li>安装#pip install pipreqs</li><li>进入项目目录下执行# pipreqs ./  自动在当前目录下生成requirements.txt文件</li></ul></li></ol><h2 id="2018-05-24"><a href="#2018-05-24" class="headerlink" title="2018.05.24"></a>2018.05.24</h2><ol><li>gensim 学习</li></ol><ul><li><a href="https://blog.csdn.net/duinodu/article/details/76618638" target="_blank" rel="noopener">参考</a></li></ul><h2 id="2018-05-23"><a href="#2018-05-23" class="headerlink" title="2018.05.23"></a>2018.05.23</h2><ol><li>docker run -itd -p 8000:8000 xxxx<br>必须要用-p来绑定端口，这样外网才能访问</li><li>history | grep docker 查看docker操作命令记录</li></ol>]]></content>
+      
+      <categories>
+          
+          <category> Study </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Tips </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    <entry>
+      <title>Docker Image</title>
+      <link href="/2018/05/28/docker-Image/"/>
+      <url>/2018/05/28/docker-Image/</url>
+      <content type="html"><![CDATA[<h2 id="1-what"><a href="#1-what" class="headerlink" title="1.what"></a>1.what</h2><p>docker 是用go写的，将进程进行封装，<br>Docker本身是容器管理技术，不是虚拟化技术。<br>类似技术：VM</p><h2 id="2-why"><a href="#2-why" class="headerlink" title="2.why"></a>2.why</h2><ul><li>快速创建环境（开发，测试，生产）</li><li>整体交付（运行环境+代码）</li><li>环境一致性保证，从开发，测试以及到生产环境</li><li>更好的完成devops</li></ul><h2 id="3-how"><a href="#3-how" class="headerlink" title="3.how"></a>3.how</h2><p>见下</p><h2 id="4-install"><a href="#4-install" class="headerlink" title="4.install"></a>4.install</h2><p>略</p><h2 id="5-基本概念"><a href="#5-基本概念" class="headerlink" title="5.基本概念"></a>5.基本概念</h2><ul><li>image<ol><li>一个特殊的文件系统，除了提供容器运行时所需的程序、库、资源、配置等文件外，还包含了一些为运行时准备的一些配置参数（如匿名卷、环境变量、用户等）。镜像不包含任何动态数据，其内容在构建之后也不会被改变。</li><li>分层存储</li></ol></li><li>container：<ol><li>容器与镜像的关系<br> 容器就是镜像的实例，一个镜像可以创建无数个实例。</li></ol><ul><li>区别：<ol><li>镜像only读取 不能写入，但是可以在当前image上叠加，形成新的image</li><li>容器支持读写    </li></ol></li></ul></li><li>registry：<br>  镜像中央存储仓库<br>  其中Docker hub是docker官方提供的中央存储仓库</li></ul><h2 id="6-image详解"><a href="#6-image详解" class="headerlink" title="6.image详解"></a>6.image详解</h2><blockquote><p>Docker镜像管理</p><ol><li>镜像分层技术<br>|-aufs</li><li>创建镜像<br> |-DockerFile(recommend)<br> |-docker commit</li><li>下载镜像到主机<br> |-docker pull</li><li>删除镜像<br> |-docker rmi<br>4.1 两种情况不能删除images<ol><li>该进行有创建容器存在</li><li>该image是其他image的父image</li></ol></li><li>上传镜像到registry<br> |-docker push</li><li>Docker数据管理<br>如果我们删除了容器，但是数据不会被删除。<br>特性：<br> 1.保留容器数据<br> 2.容器volume最佳使用方法<br> 3.容器和volume的关系<br> 4.容器volume如何管理</li></ol></blockquote><h2 id="7-tag"><a href="#7-tag" class="headerlink" title="7. tag"></a>7. tag</h2><p>下面通过例子为大家介绍 Docker 社区普遍使用的 tag 方案。</p><blockquote><p>docker tag myimage-v2.0.0 myimage:2<br> docker tag myimage-v2.0.0 myimage:2.0<br> docker tag myimage-v2.0.0 myimage:2.0.0<br> docker tag myimage-v2.0.0 myimage:latest</p></blockquote><blockquote><p>参考：<a href="http://www.cnblogs.com/CloudMan6/p/6885700.html" target="_blank" rel="noopener">http://www.cnblogs.com/CloudMan6/p/6885700.html</a></p></blockquote><h2 id="8-Docker-Hub"><a href="#8-Docker-Hub" class="headerlink" title="8. Docker Hub"></a>8. Docker Hub</h2><ol><li><p>登陆Docker Hub</p><ul><li>docker login -u xxxx</li></ul></li><li><p>修改镜像的 repository 使之与 Docker Hub 账号匹配。</p><ul><li>docker tag username/app:version</li></ul></li><li><p>上传</p><ul><li>docker push username/app:version</li></ul></li><li><p>下载</p><ul><li>docker pull username/app:version</li></ul></li></ol><h2 id="9-搭建本地-Registry"><a href="#9-搭建本地-Registry" class="headerlink" title="9. 搭建本地 Registry"></a>9. 搭建本地 Registry</h2><p>略</p><h2 id="10-小结"><a href="#10-小结" class="headerlink" title="10. 小结"></a>10. 小结</h2><p>下面是镜像的常用操作子命令：</p><ul><li><p>images    显示镜像列表</p></li><li><p>history   显示镜像构建历史</p></li><li><p>commit    从容器创建新镜像</p></li><li><p>build     从 Dockerfile 构建镜像</p></li><li><p>tag       给镜像打 tag</p></li><li><p>pull      从 registry 下载镜像</p></li><li><p>push      将 镜像 上传到 registry</p></li><li><p>rmi       删除 Docker host 中的镜像</p></li><li><p>search    搜索 Docker Hub 中的镜像</p></li></ul>]]></content>
       
       <categories>
           
