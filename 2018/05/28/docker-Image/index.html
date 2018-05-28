@@ -9,13 +9,12 @@
   <title>Docker Image | Jiekun Zhang&#39;s blog</title>
   <meta name="author" content="Jiekun Zhang">
   
-  <meta name="description" content="##docker学习记录
-1.whatdocker 是用go写的，将进程进行封装，Docker本身是容器管理技术，不是虚拟化技术。类似技术：VM
+  <meta name="description" content="docker学习记录1.whatdocker 是用go写的，将进程进行封装，Docker本身是容器管理技术，不是虚拟化技术。类似技术：VM
 2.why
 快速创建环境（开发，测试，生产）
 整体交付（运行环境+代码）
 环境一致性保证，从开发，测试以及到生产环境
-更好的完成devops###3.ho">
+更好的完成devops###3.how见下">
   
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -135,8 +134,7 @@ var _hmt = _hmt || [];
 	<div class="mypage">		
 	  		
 
-	  <p>##docker学习记录</p>
-<h3 id="1-what"><a href="#1-what" class="headerlink" title="1.what"></a>1.what</h3><p>docker 是用go写的，将进程进行封装，<br>Docker本身是容器管理技术，不是虚拟化技术。<br>类似技术：VM</p>
+	  <h2 id="docker学习记录"><a href="#docker学习记录" class="headerlink" title="docker学习记录"></a>docker学习记录</h2><h3 id="1-what"><a href="#1-what" class="headerlink" title="1.what"></a>1.what</h3><p>docker 是用go写的，将进程进行封装，<br>Docker本身是容器管理技术，不是虚拟化技术。<br>类似技术：VM</p>
 <h3 id="2-why"><a href="#2-why" class="headerlink" title="2.why"></a>2.why</h3><ul>
 <li>快速创建环境（开发，测试，生产）</li>
 <li>整体交付（运行环境+代码）</li>
@@ -160,8 +158,7 @@ var _hmt = _hmt || [];
 </li>
 <li>registry：<br>  镜像中央存储仓库<br>  其中Docker hub是docker官方提供的中央存储仓库</li>
 </ul>
-<p>###6.image详解</p>
-<blockquote>
+<h3 id="6-image详解"><a href="#6-image详解" class="headerlink" title="6.image详解"></a>6.image详解</h3><blockquote>
 <p>Docker镜像管理</p>
 <ol>
 <li>镜像分层技术<br>|-aufs<ol start="2">
@@ -173,20 +170,19 @@ var _hmt = _hmt || [];
 </ol>
 </li>
 <li>上传镜像到registry<br>|-docker push</li>
+<li>Docker数据管理<br>如果我们删除了容器，但是数据不会被删除。<br>特性：<br>1.保留容器数据<br>2.容器volume最佳使用方法<br>3.容器和volume的关系<br>4.容器volume如何管理</li>
 </ol>
 </li>
-<li>Docker数据管理<br>如果我们删除了容器，但是数据不会被删除。<br>特性：<br>   1.保留容器数据<br>   2.容器volume最佳使用方法<br>   3.容器和volume的关系<br>   4.容器volume如何管理</li>
 </ol>
 </blockquote>
-<p>###7. tag<br>下面通过例子为大家介绍 Docker 社区普遍使用的 tag 方案。</p>
+<h3 id="7-tag"><a href="#7-tag" class="headerlink" title="7. tag"></a>7. tag</h3><p>下面通过例子为大家介绍 Docker 社区普遍使用的 tag 方案。</p>
 <blockquote>
 <p>docker tag myimage-v2.0.0 myimage:2<br> docker tag myimage-v2.0.0 myimage:2.0<br> docker tag myimage-v2.0.0 myimage:2.0.0<br> docker tag myimage-v2.0.0 myimage:latest</p>
 </blockquote>
 <blockquote>
 <p>参考：<a href="http://www.cnblogs.com/CloudMan6/p/6885700.html" target="_blank" rel="noopener">http://www.cnblogs.com/CloudMan6/p/6885700.html</a></p>
 </blockquote>
-<p>###8. Docker Hub</p>
-<ol>
+<h3 id="8-Docker-Hub"><a href="#8-Docker-Hub" class="headerlink" title="8. Docker Hub"></a>8. Docker Hub</h3><ol>
 <li><p>登陆Docker Hub</p>
 <ul>
 <li>docker login -u xxxx</li>
@@ -208,8 +204,8 @@ var _hmt = _hmt || [];
 </ul>
 </li>
 </ol>
-<p>###9. 搭建本地 Registry<br>略</p>
-<p>###10. 小结<br>下面是镜像的常用操作子命令：</p>
+<h3 id="9-搭建本地-Registry"><a href="#9-搭建本地-Registry" class="headerlink" title="9. 搭建本地 Registry"></a>9. 搭建本地 Registry</h3><p>略</p>
+<h3 id="10-小结"><a href="#10-小结" class="headerlink" title="10. 小结"></a>10. 小结</h3><p>下面是镜像的常用操作子命令：</p>
 <ul>
 <li><p>images    显示镜像列表</p>
 </li>
